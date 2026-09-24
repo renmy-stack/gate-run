@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000">
+<!-- アイコン: ゲーム画面と同じ描き方（青いゲート ×3 と 青い群衆）。headless Chrome で 512×512 のスクショを撮る -->
+<canvas id="c" width="512" height="512" style="display:block"></canvas>
+<script>
+const g = document.getElementById('c').getContext('2d');
+const sky = g.createLinearGradient(0, 0, 0, 200); sky.addColorStop(0, '#5ab6ff'); sky.addColorStop(1, '#d6f0ff');
+g.fillStyle = sky; g.fillRect(0, 0, 512, 200);
+g.fillStyle = '#7ccf5a'; g.fillRect(0, 200, 512, 312);
+g.fillStyle = '#97a8c0'; g.beginPath(); g.moveTo(196, 200); g.lineTo(316, 200); g.lineTo(560, 512); g.lineTo(-48, 512); g.fill();
+// ゲート
+g.fillStyle = 'rgba(40,150,255,.8)'; g.fillRect(96, 110, 320, 150);
+g.strokeStyle = '#e6f4ff'; g.lineWidth = 8; g.strokeRect(96, 110, 320, 150);
+g.font = '900 120px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+g.lineWidth = 12; g.strokeStyle = 'rgba(0,0,0,.3)'; g.strokeText('×3', 256, 190);
+g.fillStyle = '#fff'; g.fillText('×3', 256, 190);
+// 群衆（ひまわりの並び、奥から）
+const P = [];
+for (let i = 0; i < 48; i++) { const r = 24 * Math.sqrt(i + 0.5), a = i * 2.39996; P.push([256 + r * Math.cos(a) * 1.2, 405 + r * Math.sin(a) * 0.5]); }
+P.sort((a, b) => a[1] - b[1]);
+for (const [x, y] of P) {
+  const s = 1.0 + (y - 330) / 300;
+  g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(x, y, 16 * s, 5 * s, 0, 0, 7); g.fill();
+  g.strokeStyle = '#2f7bff'; g.lineWidth = 6 * s; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(x - 6 * s, y - 28 * s); g.lineTo(x - 8 * s, y); g.moveTo(x + 6 * s, y - 28 * s); g.lineTo(x + 8 * s, y); g.stroke();
+  g.fillStyle = '#2f7bff';
+  g.beginPath(); g.ellipse(x, y - 40 * s, 10 * s, 15 * s, 0, 0, 7); g.fill();
+  g.beginPath(); g.arc(x, y - 62 * s, 9 * s, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(x - 3 * s, y - 64 * s, 3 * s, 0, 7); g.fill();
+}
+</script></body></html>
