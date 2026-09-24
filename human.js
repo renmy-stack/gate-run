@@ -10,11 +10,12 @@ function gauss(r) { return Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * M
 function play(seed) {
   const r = rng(seed * 7919);
   const P = {
-    react: 0.3 + r() * 0.2,        // 反応の遅れ（秒）
+    react: 0.25 + r() * 0.35,      // 反応の遅れ（秒）
     see: 40 + r() * 10,            // 気づく距離（m）
     think: r() < 0.35,             // しきりの中を先読みするか
     shake: 0.08 + r() * 0.1,       // 指のブレ
-    finger: 2.6 + r() * 1.2,       // 指の速さ（tx/秒）
+    finger: 2.2 + r() * 1.8,       // 指の速さ（tx/秒）
+    slip: 0.03 + r() * 0.09,       // ゲートを見まちがえて 逆を選ぶ確率
   };
   const S = GR.create();
   const inputs = [], log = [];
@@ -53,7 +54,8 @@ function decide(S, it, P, r) {
   switch (it.type) {
     case 'gate': {
       const a = it.l ? GR.applyOp(S.n, it.l) : S.n, b = it.r ? GR.applyOp(S.n, it.r) : S.n;
-      return a >= b ? -0.8 : 0.8;
+      const side = a >= b ? -0.8 : 0.8;
+      return r() < P.slip ? -side : side;
     }
     case 'div': {
       // しきり: 中の最初のゲートを目先で比べる。先読みする人は中の全部を足し算・かけ算してみる
@@ -64,11 +66,12 @@ function decide(S, it, P, r) {
         if (P.think) for (const e of S.items) if (e.type === 'enemy' && !e.boss && e.z > it.z0 && e.z < it.z1 && lane(e.x) === side) n -= e.n;
         return n;
       };
-      return val(-1) >= val(1) ? -0.8 : 0.8;
+      const side = val(-1) >= val(1) ? -0.8 : 0.8;
+      return r() < P.slip ? -side : side;
     }
     case 'enemy': return it.boss ? 0 : -lane(it.x) * 0.9;
     case 'ally': return lane(it.x) * 0.9;
-    case 'hole': return r() < 0.5 ? -0.9 : 0.9;
+    case 'hole': return (S.x < 0 ? -0.9 : 0.9) * (r() < P.slip ? -1 : 1);   // 近いほうへ よける（たまに逆へ行ってしまう）
     case 'bar': return it.x0 < 0 ? 0.9 : -0.9;
     case 'saw': return T => -lane(GR.sawX(it, T.f)) * 0.9;                  // ノコを見ながら いない側へ
     case 'spin': return r() < 0.5 ? -0.9 : 0.9;                             // 回る棒は読めないので どちらかの端
@@ -82,6 +85,8 @@ function decide(S, it, P, r) {
   return 0;
 }
 
+module.exports = { play };
+if (require.main !== module) return;
 const N = +(process.argv[2] || 10);
 if (process.argv.includes('--stats')) {
   // たくさん遊ばせて分布だけ出す
@@ -98,7 +103,6 @@ if (process.argv.includes('--stats')) {
   const q = p => ns[Math.min(ns.length - 1, Math.floor(ns.length * p))];
   console.log(N + '回  最上段 ' + (top / N * 100).toFixed(1) + '%  ぜんめつ ' + (dead / N * 100).toFixed(1) + '%  平均 ' + Math.round(sum / N) + 'てん');
   console.log('ゴール人数  50%:' + q(0.5) + '  90%:' + q(0.9) + '  99%:' + q(0.99) + '  最高:' + ns[ns.length - 1] + '   （最上段に要る人数 ' + GR.stairCost(GR.STEPS) + '）');
-  console.log('×4 当てた ' + mgHit[0] + '回 平均' + Math.round(mgHit[1] / Math.max(1, mgHit[0])) + '  外した ' + mgMiss[0] + '回 平均' + Math.round(mgMiss[1] / Math.max(1, mgMiss[0])));
   console.log('段の分布: ' + steps.map((c, k) => c ? k + '段:' + c : '').filter(Boolean).join(' '));
   process.exit(0);
 }
@@ -115,7 +119,6 @@ for (let i = 1; i <= N; i++) {
     S.phase === 'goal' ? '(' + S.n + '人 ×' + S.mult.toFixed(1) + ')' : '(' + Math.round(S.z) + 'm)',
     ' 選び ' + S.picks.join(''), P.think ? '先読み' : '目先  ',
     ' 反応' + P.react.toFixed(2) + 's',
-    ' ×4ゲート' + (mg && mg[2] ? '○' : '×'),
     ' 減った所 ' + (losses.join(' ') || 'なし'));
 }
 const sc = rows.map(r => r.S.phase === 'goal' ? r.S.score : 0).sort((a, b) => a - b);

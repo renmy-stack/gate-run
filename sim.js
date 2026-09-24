@@ -3,7 +3,7 @@
 'use strict';
 (function (root) {
 
-const SIM_VERSION = 4;          // コース・数値を変えたら上げる（古い記録は捨てる）
+const SIM_VERSION = 5;          // コース・数値を変えたら上げる（古い記録は捨てる）
 const FPS = 60;
 const RW = 5;                   // 道の半幅（m）
 const SPEED = 12;               // 前に進む速さ（m/秒）
@@ -14,8 +14,8 @@ const FIGHT_DIV = 22;           // ぶつかったとき 1 フレームで減る
 const BOSS_DIV = 40;            // ボスは ゆっくり減る
 const START_F = 60;             // スタートまでの間
 const CUT_CAP = 0.25;           // 動く仕掛け（ノコ・回るぼう・プレス）で 1 回に減るのは この割合まで
-// ゴールのあとの かいだん: k 段目に上るには 6×k 人いる（ボス 730 と組で、人が遊んで ぜんめつ約 50%・最上段 約 1%。human.js 5000 --stats で確認）。倍率は 1 + 0.1×k（最大 20 段 = ×3.0）
-const STEP_COST = 6, STEP_MULT = 0.1, STEPS = 20;
+// ゴールのあとの かいだん: k 段目までに ceil(1.5×k(k+1)/2) 人いる（人が遊んで ぜんめつ約 50%・最上段 約 1%。opt.js / human.js 5000 --stats で確認）。倍率は 1 + 0.1×k（最大 20 段 = ×3.0）
+const STEP_COST = 1.5, STEP_MULT = 0.1, STEPS = 20;
 
 const PI = 3.141592653589793, TWO_PI = PI * 2, HALF_PI = PI / 2;
 function wrapAngle(x) { x = x % TWO_PI; if (x > PI) x -= TWO_PI; else if (x < -PI) x += TWO_PI; return x; }
@@ -49,6 +49,7 @@ function radius(n) { return n <= 0 ? 0 : GAP * Math.sqrt(shown(n)) * 1.02 + 0.2;
 // press: 上下するプレス（x0〜x1、周期 per 秒、下りている割合 down）
 // mgate: 左右に動く 1 枚ゲート（はば w）
 const G = (z, l, r) => ({ type: 'gate', z, l, r });
+// k: 数値の調整用の名前（opt.js が人間らしいプレイヤーで ぜんめつ約 50%・最上段約 1%・ぜんめつ場所がばらける ように決める）
 const COURSE = {
   name: 'コース1',
   length: 318,
@@ -56,29 +57,32 @@ const COURSE = {
     G(20, ['+', 5], ['x', 2]),
     { type: 'ally', z: 30, x: -3.2, n: 6 },
     G(42, ['x', 3], ['+', 10]),
-    { type: 'hole', z: 56, x0: -1.7, x1: 1.7, d: 3 },
+    { type: 'enemy', z: 48, n: 16, k: 'e1' },
+    { type: 'hole', z: 60, x0: -1.7, x1: 1.7, d: 3 },
     // しきり: 同じ 2 つでも「たす → かける」のほうが得
-    { type: 'div', z0: 66, z1: 94 },
-    G(70, ['+', 10], ['x', 2]),
+    { type: 'div', z0: 68, z1: 94 },
+    G(72, ['+', 10], ['x', 2]),
     G(88, ['x', 3], ['+', 15]),
-    { type: 'enemy', z: 106, x: 2.5, n: 30 },
-    { type: 'spin', z: 120, px: 0, len: 3.2, per: 2.4, ph: 0 },
-    { type: 'mgate', z: 134, op: ['x', 4], w: 2.6, amp: 3.2, per: 2.6, ph: 0.25 },
-    { type: 'press', z: 146, x0: -RW, x1: 0, per: 1.4, ph: 0, down: 0.5 },
-    { type: 'press', z: 146, x0: 0, x1: RW, per: 1.4, ph: 0.5, down: 0.5 },
+    { type: 'mgate', z: 110, op: ['+', 40], w: 2.6, amp: 3.2, per: 2.2, ph: 0.25, k: 'm1' },
+    { type: 'enemy', z: 122, x: 2.5, n: 30 },
+    { type: 'spin', z: 132, px: 0, len: 3.2, per: 2.4, ph: 0 },
+    { type: 'enemy', z: 142, n: 50, k: 'e2' },
+    { type: 'press', z: 152, x0: -RW, x1: 0, per: 1.4, ph: 0, down: 0.5 },
+    { type: 'press', z: 152, x0: 0, x1: RW, per: 1.4, ph: 0.5, down: 0.5 },
     // しきり: 目先の ×2 のほうは中に敵がいる
-    { type: 'div', z0: 158, z1: 198 },
-    G(162, ['x', 2], ['+', 40]),
-    { type: 'enemy', z: 176, x: -2.6, n: 50 },
-    G(192, ['+', 30], ['x', 2]),
-    { type: 'ally', z: 206, x: 3.2, n: 40 },
-    { type: 'enemy', z: 218, n: 60 },
-    G(232, ['/', 2], ['+', 80]),
-    { type: 'saw', z: 246, r: 0.9, amp: 3.4, per: 1.6, ph: 0.5 },
-    { type: 'saw', z: 254, r: 0.9, amp: 3.4, per: 1.6, ph: 0 },
-    G(268, ['x', 3], ['-', 30]),
-    { type: 'bar', z: 280, x0: 0.8, x1: RW },
-    { type: 'enemy', z: 300, n: 730, boss: true },
+    { type: 'div', z0: 162, z1: 200 },
+    G(166, ['x', 2], ['+', 40]),
+    { type: 'enemy', z: 180, x: -2.6, n: 50 },
+    G(194, ['+', 30], ['x', 2]),
+    { type: 'ally', z: 208, x: 3.2, n: 40 },
+    { type: 'mgate', z: 220, op: ['+', 80], w: 2.6, amp: 3.2, per: 2.6, ph: 0.6, k: 'm2' },
+    { type: 'enemy', z: 232, n: 120, k: 'e3' },
+    G(242, ['/', 2], ['+', 80]),
+    { type: 'saw', z: 252, r: 0.9, amp: 3.4, per: 1.6, ph: 0.5 },
+    { type: 'saw', z: 259, r: 0.9, amp: 3.4, per: 1.6, ph: 0 },
+    G(270, ['x', 3], ['-', 30]),
+    { type: 'bar', z: 282, x0: 0.8, x1: RW },
+    { type: 'enemy', z: 300, n: 220, boss: true, k: 'boss' },
   ],
 };
 
@@ -115,8 +119,8 @@ function applyOp(n, op) {
 function opText(op) { return op ? ({ '+': '+', '-': '−', 'x': '×', '/': '÷' })[op[0]] + op[1] : ''; }
 function opGood(op) { return op && (op[0] === '+' || op[0] === 'x'); }
 // n 人で上れる段数
-function stairsFor(n) { let k = 0; while (k < STEPS && STEP_COST * (k + 1) * (k + 2) / 2 <= n) k++; return k; }
-function stairCost(k) { return STEP_COST * k * (k + 1) / 2; }
+function stairsFor(n) { let k = 0; while (k < STEPS && stairCost(k + 1) <= n) k++; return k; }
+function stairCost(k) { return Math.ceil(STEP_COST * k * (k + 1) / 2); }
 function stairMult(k) { return Math.round((1 + STEP_MULT * k) * 10) / 10; }
 
 function die(S) { S.n = 0; S.phase = 'dead'; S.fx.push({ t: 'dead' }); }
