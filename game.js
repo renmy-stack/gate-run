@@ -1,6 +1,6 @@
 // ふやせ！ゲートラン — 描画・入力・進行・シェア
 'use strict';
-const VERSION = '2';   // version.txt と合わせる。更新したら index.html の ?v= も上げる
+const VERSION = '3';   // version.txt と合わせる。更新したら index.html の ?v= も上げる
 const SITE_URL = 'https://renmy-stack.github.io/gate-run/';
 const FPS = GR.FPS;
 
@@ -279,6 +279,15 @@ function drawWorld() {
     const z1 = L + 3 + (k - 1) * STEP_D;
     if (z1 > zFar || z1 + STEP_D < cz + 0.5) continue;
     list.push([z1 + STEP_D + 0.001, () => drawStep(k, z1)]);
+    // 上った段には、その段で使った人が並んで残る（12×k 人。絵は 1 列ぶんまで）
+    if (k <= climbStep() && k < GR.STEPS + 1) {
+      const c = Math.min(GR.STEP_COST * k, 14);
+      for (let i = 0; i < c; i++) {
+        const x = -GR.RW + 0.6 + (2 * GR.RW - 1.2) * (c === 1 ? 0.5 : i / (c - 1));
+        const z = z1 + STEP_D * 0.5 + (i & 1 ? 0.22 : -0.22);
+        list.push([z, () => person(x, z, '#2f7bff', i + k * 3, { idle: true, y: k * STEP_H })]);
+      }
+    }
   }
   const nNow = climbStep() > 0 ? climbN() : S.n;
   if (nNow > 0) {
@@ -424,6 +433,10 @@ function drawStep(k, z1) {
   if (fs < 6) return;
   ctx.font = '900 ' + fs + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff'; ctx.fillText('×' + GR.stairMult(k).toFixed(1), c.x, c.y);
+  // 右はしに「この段で 何人 のこるか」
+  const r = P(RW * 0.72, y1 - STEP_H * 0.5, z1); if (!r || fs < 9) return;
+  ctx.font = '800 ' + fs * 0.62 + 'px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillText(GR.STEP_COST * k + '人', r.x, r.y);
 }
 function drawHole(it) {
   const za = Math.max(it.z, camZ() + 0.6), zb = it.z + it.d;
