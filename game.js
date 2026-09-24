@@ -1,6 +1,6 @@
 // ふやせ！ゲートラン — 描画・入力・進行・シェア
 'use strict';
-const VERSION = '3';   // version.txt と合わせる。更新したら index.html の ?v= も上げる
+const VERSION = '4';   // version.txt と合わせる。更新したら index.html の ?v= も上げる
 const SITE_URL = 'https://renmy-stack.github.io/gate-run/';
 const FPS = GR.FPS;
 

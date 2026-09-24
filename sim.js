@@ -3,7 +3,7 @@
 'use strict';
 (function (root) {
 
-const SIM_VERSION = 2;          // コース・数値を変えたら上げる（古い記録は捨てる）
+const SIM_VERSION = 3;          // コース・数値を変えたら上げる（古い記録は捨てる）
 const FPS = 60;
 const RW = 5;                   // 道の半幅（m）
 const SPEED = 12;               // 前に進む速さ（m/秒）
@@ -13,8 +13,9 @@ const SHOWN = 120;              // 絵として並べる最大人数（それ以
 const FIGHT_DIV = 22;           // ぶつかったとき 1 フレームで減る数 = ceil(少ないほう / これ)
 const BOSS_DIV = 40;            // ボスは ゆっくり減る
 const START_F = 60;             // スタートまでの間
-// ゴールのあとの かいだん: k 段目に上るには 12×k 人いる。倍率は 1 + 0.1×k（最大 20 段 = ×3.0）
-const STEP_COST = 12, STEP_MULT = 0.1, STEPS = 20;
+const CUT_CAP = 0.25;           // 動く仕掛け（ノコ・回るぼう・プレス）で 1 回に減るのは この割合まで
+// ゴールのあとの かいだん: k 段目に上るには 9×k 人いる（人が遊んで最上段は約 1%、human.js --stats で確認）。倍率は 1 + 0.1×k（最大 20 段 = ×3.0）
+const STEP_COST = 9, STEP_MULT = 0.1, STEPS = 20;
 
 const PI = 3.141592653589793, TWO_PI = PI * 2, HALF_PI = PI / 2;
 function wrapAngle(x) { x = x % TWO_PI; if (x > PI) x -= TWO_PI; else if (x < -PI) x += TWO_PI; return x; }
@@ -209,7 +210,8 @@ function step(S, tx) {
         if (hit) hitIdx.push(i);
       }
       if (hitIdx.length) {
-        const k = Math.max(1, Math.round(S.n * hitIdx.length / sn));
+        let k = Math.max(1, Math.round(S.n * hitIdx.length / sn));
+        if (it.type === 'saw' || it.type === 'spin' || it.type === 'press') k = Math.min(k, Math.max(1, Math.ceil(S.n * CUT_CAP)));
         S.n = Math.max(0, S.n - k);
         S.fx.push({ t: it.type === 'hole' ? 'fall' : 'cut', id: it.id, k, idx: hitIdx, x: S.x, z: S.z });
       }
