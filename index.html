@@ -6,13 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#5ab6ff">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-title" content="ゲートラン">
 <meta property="og:title" content="ふやせ！ゲートラン">
 <meta property="og:description" content="×3 や +20 のゲートをえらんで なかまを ふやせ！ゴールまで何人つれていける？">
 <title>ふやせ！ゲートラン</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -26,9 +26,12 @@
     <ul class="howto">
       <li><b class="k">左右にドラッグ</b> みんなで いどう</li>
       <li><b class="blue">青いゲート</b> ふえる（＋ ×）　<b>赤いゲート</b> へる（− ÷）</li>
-      <li><b>赤い むれ</b>に ぶつかると おなじ数だけ へる</li>
-      <li>ノコギリ・しましまの かべに 当たった人は いなくなる</li>
+      <li><b class="gold">動くゲート</b>は 重なれたら 大きく ふえる</li>
+      <li><b class="gray">灰色の人</b>に ふれると なかまになる</li>
+      <li><b>赤い むれ・ボス</b>に ぶつかると おなじ数だけ へる</li>
+      <li>ノコギリ・回るぼう・プレス・かべ・あな に 当たった人は いなくなる</li>
       <li>オレンジの <b>しきり</b>の中は 反対がわへ 行けない</li>
+      <li>ゴールのあとは <b>かいだん</b>。上った段の 倍率が 人数に かかる</li>
     </ul>
     <button id="play" class="main">あそぶ</button>
   </div>
@@ -37,7 +40,7 @@
 <div id="result" hidden>
   <div class="panel">
     <div class="rtitle" id="rtitle">ゴール！</div>
-    <div class="rnum"><span id="rnum">0</span><span class="unit">人</span></div>
+    <div class="rnum"><span id="rnum">0</span><span class="unit">てん</span></div>
     <div class="rsub" id="rsub"></div>
     <div class="rbest" id="rbest"></div>
     <div class="rrival" id="rrival" hidden></div>
@@ -60,7 +63,7 @@
   </div>
 </div>
 
-<script src="sim.js?v=1"></script>
-<script src="game.js?v=1"></script>
+<script src="sim.js?v=2"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>

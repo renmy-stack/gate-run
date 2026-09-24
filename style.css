@@ -43,6 +43,8 @@ button { font: inherit; }
 .howto b { color: var(--hot); }
 .howto b.k { display: inline-block; min-width: 108px; }
 .howto b.blue { color: #1f7ae0; }
+.howto b.gold { color: #d08a00; }
+.howto b.gray { color: #6b7280; }
 
 .main, .sub {
   border: 3px solid var(--ink); border-radius: 14px; padding: 10px 22px; font-weight: 800; font-size: 18px; cursor: pointer;
